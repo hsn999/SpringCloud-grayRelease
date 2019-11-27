@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.start.commom.core.CoreAutoConfiguration,com.start.commom.core.RulePropertiesConfig
+  com.start.commom.core.RulePropertiesConfig

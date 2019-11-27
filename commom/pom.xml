@@ -101,11 +101,7 @@
 			<artifactId>spring-cloud-starter-ribbon</artifactId>
 			<version>1.4.4.RELEASE</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-eureka</artifactId>
-			<version>1.4.4.RELEASE</version>
-		</dependency>
+		
 
 		<!-- nacos -->
 		<dependency>

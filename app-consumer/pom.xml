@@ -1,32 +1,22 @@
 <?xml version="1.0"?>
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>SpringCloud-grayRelease</groupId>
-		<artifactId>SpringCloud-grayRelease</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-	</parent>
-
-	<groupId>SpringCloud-grayRelease</groupId>
-	<artifactId>zuul</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>zuul</name>
-	<url>http://maven.apache.org</url>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<java.version>1.8</java.version>
-		<spring-cloud.version>Greenwich.SR1</spring-cloud.version>
-		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
-	</properties>
-
-	<dependencies>
-
-		<dependency>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>SpringCloud-grayRelease</groupId>
+    <artifactId>SpringCloud-grayRelease</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>SpringCloud-grayRelease</groupId>
+  <artifactId>app-consumer</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>app-consumer</name>
+  <url>http://maven.apache.org</url>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
@@ -91,21 +81,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	</dependency>
-
-	</dependencies>
-
-
-
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
-
-
+    
+  </dependencies>
 </project>
-

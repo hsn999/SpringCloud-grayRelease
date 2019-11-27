@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -31,7 +32,9 @@ import java.util.Map;
 public class ApiRequestAspect {
 	private static Logger logger = LoggerFactory.getLogger(ApiRequestAspect.class);
  
-
+	//@Pointcut"@annotation(org.springframework.web.bind.annotation.ResponseBody)");
+	//@Pointcut"@annotation(org.springframework.web.bind.annotation.RestController)");
+	
 	@Pointcut("execution (* app.service.controller.AppServiceController.*(..)) ")
 	private void anyMethod() {
 	}
@@ -48,9 +51,17 @@ public class ApiRequestAspect {
 		Map<String,String> map = new HashMap<>();
 		String username =  request.getHeader("username");
 		String token = request.getHeader("token");
+		String version = request.getHeader("version");
+		
+		
+		if(version == null) {
+        	version = request.getParameter("v");
+        }
+		
 		
 		map.put("username", username);
 		map.put("token", token);
+		map.put("version", version);
 		
 		//将map放到threadLocal中
 		PassParameters.set(map);

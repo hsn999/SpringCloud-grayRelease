@@ -1,14 +1,16 @@
 package com.start.commom.core;
 
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.google.common.base.Optional;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAvoidanceRule;
 //import com.netflix.niws.loadbalancer.DiscoveryEnabledServer;
-import com.netflix.niws.loadbalancer.DiscoveryEnabledServer;
+import com.start.commom.threadLocal.PassParameters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.alibaba.nacos.NacosDiscoveryClient;
+import org.springframework.cloud.alibaba.nacos.ribbon.NacosServer;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -22,27 +24,39 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
 	@Override
 	public Server choose(Object key) {
 
-		List<Server> serverList = this.getPredicate().getEligibleServers(this.getLoadBalancer().getAllServers(), key);
 		List<Server> servers = this.getLoadBalancer().getReachableServers();
-//http://www.imooc.com/article/288660
 
-		if (CollectionUtils.isEmpty(serverList)) {
+		if (CollectionUtils.isEmpty(servers)) {
 			return null;
 		}
-		
-		NacosDiscoveryClient NacosDiscoveryClient;
 
-		String hystrixVer = CoreHeaderInterceptor.version.get();
-		logger.info("======>GrayMetadataRule:  hystrixVer{}", hystrixVer);
+		// 需要从head取灰度标识
+		//String version = "mx";
+		Map<String,String> map = PassParameters.get();    
+        
+        String  version = map.get("version");
+        /*if(StringUtils.isEmpty(version)){
+           
+        }*/
+		
+
 
 		List<Server> noMetaServerList = new ArrayList<>();
-		for (Server server : serverList) {
-			Map<String, String> metadata = ((DiscoveryEnabledServer) server).getInstanceInfo().getMetadata();
+		for (Server server : servers) {
+			if (!(server instanceof NacosServer)) {
+				logger.error("参数非法，server = {}", server);
+				throw new IllegalArgumentException("参数非法，不是NacosServer实例！");
+			}
+
+			NacosServer nacosServer = (NacosServer) server;
+			Instance instance = nacosServer.getInstance();
+
+			Map<String, String> metadata = instance.getMetadata();
 
 			// version策略
 			String metaVersion = metadata.get(META_DATA_KEY_VERSION);
 			if (!StringUtils.isEmpty(metaVersion)) {
-				if (metaVersion.equals(hystrixVer)) {
+				if (metaVersion.equals(version)) {
 					return server;
 				}
 			} else {
@@ -50,12 +64,13 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
 			}
 		}
 
-		if (StringUtils.isEmpty(hystrixVer) && !noMetaServerList.isEmpty()) {
+		if (StringUtils.isEmpty(version) && !noMetaServerList.isEmpty()) {
 			logger.info("====> 无请求header...");
 			return originChoose(noMetaServerList, key);
 		}
 
 		return null;
+
 	}
 
 	private Server originChoose(List<Server> noMetaServerList, Object key) {

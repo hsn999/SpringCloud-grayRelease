@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import com.start.app.consumer.feignService.HelloRemote;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -28,11 +30,16 @@ public class ApiController {
 	/* @Autowired
 	 HelloRemote helloRemote;*/
 	
+	 @Autowired
+	 HelloRemote helloRemote;
+
+	
 	@Value("${useLocalCache:false}")
     private boolean useLocalCache;
  
     @RequestMapping("/get")
     public boolean get() {
+    	helloRemote.printDate();
         return useLocalCache;
     }
     

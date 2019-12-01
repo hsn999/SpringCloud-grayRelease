@@ -40,5 +40,6 @@
 		<module>zuul</module>
 		<module>commom</module>
 		<module>app-consumer</module>
+		<module>app-provider</module>
 	</modules>
 </project>

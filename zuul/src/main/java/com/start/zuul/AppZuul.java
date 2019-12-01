@@ -12,23 +12,23 @@ import org.springframework.context.annotation.Bean;
 
 import com.start.zuul.filter.GrayFilter;
 
+//import com.start.zuul.filter.GrayFilter;
+
 /**
  * Hello world!
  *
  */
-@SpringBootApplication(scanBasePackages = {"com.start"}, exclude = DataSourceAutoConfiguration.class)
+@SpringBootApplication(scanBasePackages = { "com.start" }, exclude = DataSourceAutoConfiguration.class)
 @EnableDiscoveryClient
 @EnableZuulProxy
-@EnableFeignClients
-public class AppZuul
-{
-    public static void main( String[] args )
-    {
-    	SpringApplication.run(AppZuul.class, args);
-    }
-    
-    @Bean
+public class AppZuul {
+	public static void main(String[] args) {
+		SpringApplication.run(AppZuul.class, args);
+	}
+
+	@Bean
 	public GrayFilter grayFilter() {
 		return new GrayFilter();
 	}
+
 }

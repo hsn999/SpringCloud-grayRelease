@@ -32,9 +32,18 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
 
 		// 需要从head取灰度标识
 		//String version = "mx";
-		Map<String,String> map = PassParameters.get();    
+		Map<String,String> map = PassParameters.get();  
+		
+		String  version = null;
+		
+		
+		
+		if(map != null && map.containsKey("version")) {
+			version = map.get("version");
+		}
         
-        String  version = map.get("version");
+		logger.info("GrayMetadataRule:"+version);
+        
         /*if(StringUtils.isEmpty(version)){
            
         }*/
@@ -52,16 +61,21 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
 			Instance instance = nacosServer.getInstance();
 
 			Map<String, String> metadata = instance.getMetadata();
-
-			// version策略
-			String metaVersion = metadata.get(META_DATA_KEY_VERSION);
-			if (!StringUtils.isEmpty(metaVersion)) {
-				if (metaVersion.equals(version)) {
-					return server;
+			
+			if(version !=null) {
+				// version策略
+				String metaVersion = metadata.get(META_DATA_KEY_VERSION);
+				if (!StringUtils.isEmpty(metaVersion)) {
+					if (metaVersion.equals(version)) {
+						return server;
+					}
+				} else {
+					noMetaServerList.add(server);
 				}
-			} else {
+			}else {
 				noMetaServerList.add(server);
 			}
+			
 		}
 
 		if (StringUtils.isEmpty(version) && !noMetaServerList.isEmpty()) {

@@ -32,18 +32,7 @@ import java.util.Map;
 public class ApiRequestAspect {
 	private static Logger logger = LoggerFactory.getLogger(ApiRequestAspect.class);
  
-	//@Pointcut("@annotation(org.springframework.web.bind.annotation.ResponseBody)");
-	//@Pointcut("@annotation(org.springframework.web.bind.annotation.RestController)");
-	
-	//@Pointcut("execution (* app.service.controller.AppServiceController.*(..)) ")
-	//@Pointcut("@annotation(org.springframework.web.bind.annotation.RestController)" );
-	
-	
-	//@Pointcut("@annotation(ssm.annotation.Log)")
-	//@Pointcut("@annotation(org.springframework.web.bind.annotation.RestController)" )
-	//@Pointcut("@annotation(org.springframework.web.bind.annotation.RestController)" )
-	//@Pointcut("within(@org.springframework.stereotype.Controller *)")
-	//@Pointcut("execution (* com.start.app.consumer.controller.ApiController.*(..)) ")
+
 	@Pointcut("execution(* com.start.app..controller..*Controller*.*(..))")
 	private void anyMethod() {
 	}

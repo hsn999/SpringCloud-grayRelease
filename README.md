@@ -1,5 +1,5 @@
 # SpringCloud-grayRelease
-整合nacos（Euraka）实现灰度发布
+整合nacos（Euraka 类似）实现灰度发布
 
 在一般情况下，升级服务器端应用，需要将应用源码或程序包上传到服务器，然后停止掉老版本服务，再启动新版本。但是这种简单的发布方式存在两个问题，一方面，在新版本升级过程中，服务是暂时中断的，另一方面，如果新版本有BUG，升级失败，回滚起来也非常麻烦，容易造成更长时间的服务不可用。
 
@@ -11,7 +11,7 @@
 
 那么，在springcloud的分布式环境中，我们如何来区分用户（版本），如何来指定这部分用户使用不同版本的微服务?这篇文章将会通过实际的例子来说明这个过程。
 
-假设用户发起一个访问，服务的调用路径为：用户--> ZUUL -->SERVICE1-->SERVICE2，那么我们在ZUUL和SERVICE1都需要实现自定义的访问路由。
+假设用户发起一个访问，服务的调用路径为：用户--> ZUUL -->app-consumer-->app-provider，那么我们在ZUUL和SERVICE1都需要实现自定义的访问路由。
 
 下面这个设计的重点主要在：
 
@@ -236,7 +236,61 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
 }
 ~~~
 
-4. 设置环境变量
+
+4. feign 拦截器,将天后热adlocal中的内容读出并写入请求头,通过这种方式传递版本信息
+~~~
+package com.start.commom.core;
+
+
+import feign.Feign;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.annotation.Configuration;
+
+import com.start.commom.threadLocal.PassParameters;
+
+ 
+@Configuration
+@ConditionalOnClass(Feign.class)
+public class DefaultFeignConfig implements RequestInterceptor {
+ 
+    @Value("${spring.application.name}")
+    private String appName;
+ 
+    @Override
+    public void apply(RequestTemplate requestTemplate)
+    {
+    	Map<String,String> map = PassParameters.get();
+    	
+        String username = map.get("username");
+        if(StringUtils.isNotEmpty(username)){
+            requestTemplate.header("username", username);
+        }
+        String token = map.get("token");
+        if(StringUtils.isNotEmpty(token)){
+            requestTemplate.header("token", token);
+        }
+        //这里是灰度的版本信息
+        String  version = map.get("version");
+        if(StringUtils.isNotEmpty(version)){
+            requestTemplate.header("version", version);
+        }
+        
+        
+        
+    }
+ 
+}
+~~~
+
+5. 设置环境变量
 自定义的路由规则，需要在 application.properties 中配置才能使用，（service1.ribbon.NFLoadBalancerRuleClassName=com.start.commom.core.GrayMetadataRule   service1就是要用这个规则的具体服务），这个配置的实际作用就是设置了一个环境变量，如果服务很多，我们创建一个数组，用代码创建 ，下面这个配置就是通过配置文件读取需要利用这个路由规则的服务列表，创建环境变量
 
 ~~~
@@ -294,5 +348,102 @@ public class MyRibbonConfiguration implements InitializingBean {
 
 }
 
+~~~
+
+
+## ZUUL配置
+
+
+~~~
+spring.application.name=zuul-gateway
+server.port=8899
+spring.cloud.nacos.discovery.server-addr = 127.0.0.1:8848
+swagger.enabled=true
+swagger.title=zuul-gateway
+#自定义的负载均衡类
+ribbon.NFLoadBalancerRuleClassName=com.start.commom.core.GrayMetadataRule
+#需要使用自定义负载均衡的服务(spring.application.name 对应的值)
+loadbalanced.services=app-consumer
+~~~
+
+
+增加自定义ZUUL过滤器,拦截后将版本信息放到threadlocal中,在路由的时候,判断当前的版本信息
+~~~
+
+package com.start.zuul.filter;
+
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import com.start.commom.threadLocal.PassParameters;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+public class GrayFilter extends ZuulFilter {
+
+	private static final String HEADER_TOKEN = "token";
+	private static final Logger logger = LoggerFactory.getLogger(GrayFilter.class);
+
+	@Override
+	public String filterType() {
+		return FilterConstants.PRE_TYPE;
+	}
+
+	@Override
+	public int filterOrder() {
+		return 1000;
+	}
+
+	@Override
+	public boolean shouldFilter() {
+		return true;
+	}
+
+	@Override
+	public Object run() {
+		RequestContext ctx = RequestContext.getCurrentContext();
+		String token = ctx.getRequest().getHeader(HEADER_TOKEN);
+
+		String userId = token;
+		log.info("======>userId:{}", userId);
+
+		// 传递给后续微服务,这里可以根据用户来判定是否应有灰度,我这里直接在请求中加了个v来判断
+		String v = ctx.getRequest().getParameter("v");
+		String version = v;
+		if (v != null) {
+			ctx.addZuulRequestHeader("version", version);
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("version", version);
+			PassParameters.set(map);
+		}
+
+		return null;
+	}
+}
+
+~~~
+
+
+APP-CONSUMER配置
+
+app-consumer,通过切面获取到版本信息,并将版本信息放入threadlocal中,通过feign再封装到http头,传递到下一层
+~~~
+spring.application.name=app-consumer
+server.port=8900
+
+spring.cloud.nacos.discovery.server-addr = 127.0.0.1:8848
+spring.cloud.nacos.config.file-extension = properties
+swagger.enabled=true
+swagger.title=app-consumer
+
+ribbon.NFLoadBalancerRuleClassName=com.start.commom.core.GrayMetadataRule
+loadbalanced.services=app-provider
 ~~~
 

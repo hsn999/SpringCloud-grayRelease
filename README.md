@@ -25,6 +25,7 @@
 
 公共配置：
 1. ThreadLocal
+~~
 package com.start.commom.threadLocal;
 
 import org.slf4j.Logger;
@@ -50,6 +51,7 @@ public class PassParameters {
         }
     }
 
+~~
 2. AOP拦截请求头
 package com.start.commom.aop;
 

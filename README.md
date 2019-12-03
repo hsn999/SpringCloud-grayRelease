@@ -55,7 +55,7 @@ public class PassParameters {
 2. AOP拦截请求头
 package com.start.commom.aop;
 
-
+~~~
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -130,9 +130,12 @@ public class ApiRequestAspect {
     
 }
 
+~~~
+
 3. 实现自己的GrayMetadataRule
 GrayMetadataRule 将会从nacos中获取元服务器的信息，并根据这个信息选择服务器
 
+~~~
 package com.start.commom.core;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
@@ -231,11 +234,12 @@ public class GrayMetadataRule extends ZoneAvoidanceRule {
         }
     }
 }
-
+~~~
 
 4. 设置环境变量
 自定义的路由规则，需要在 application.properties 中配置才能使用，（service1.ribbon.NFLoadBalancerRuleClassName=com.start.commom.core.GrayMetadataRule   service1就是要用这个规则的具体服务），这个配置的实际作用就是设置了一个环境变量，如果服务很多，我们创建一个数组，用代码创建 ，下面这个配置就是通过配置文件读取需要利用这个路由规则的服务列表，创建环境变量
 
+~~~
 package com.start.commom.core;
 
 import java.util.List;
@@ -290,5 +294,5 @@ public class MyRibbonConfiguration implements InitializingBean {
 
 }
 
-
+~~~
 
